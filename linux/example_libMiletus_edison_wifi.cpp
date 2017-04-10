@@ -36,7 +36,7 @@ command that toggles that defines the Edson's built-in LED.
 #include <mraa.h>
 
 #define DEVICE_NAME "My_Favorite_IOT_Device"
-#define BUILT_IN_LED 8
+#define BUILT_IN_LED 13
 
 /* Keep the least values */
 bool led_state = false;
