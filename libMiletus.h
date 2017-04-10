@@ -34,7 +34,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef ARDUINO
 #include <ArduinoJson.h>
 #else
-#include "linux/lib/ArduinoJson/include/ArduinoJson.hpp"
+#include "linux/third-party/ArduinoJson/include/ArduinoJson.hpp"
 #endif
 
 #ifndef FINGERPRINT

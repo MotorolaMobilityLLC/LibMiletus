@@ -124,7 +124,6 @@ string MiletusDevice::getComponentsJson(){
   cjson +=  "\"components\":{\n";
   for(i = components.begin(), ie = components.end(); i != ie; i++){
     if (i != components.begin()){
-      Serial.print(",");
       cjson += ",";
     }
     cjson += (*i)->getJson();
