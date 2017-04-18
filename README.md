@@ -31,7 +31,7 @@ For more examples, access our [Supported Platforms](http://libmiletus.ic.unicamp
 
 ## Client Application
  
-You can find a client library and a sample application in the [client-side](To.Be.Defined/clients/) page. 
+You can find a client library and a sample application in the [MiletusApp repository](https://github.com/MotorolaMobilityLLC/MiletusApp) page. 
 
 ## Supported Platforms
 
