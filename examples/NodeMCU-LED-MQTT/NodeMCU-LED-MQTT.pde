@@ -2,7 +2,6 @@
 The MIT License (MIT)
 Copyright (c) 2016 Jeferson Rech Brunetta -- ra161253@students.ic.unicamp.br
 Copyright (c) 2016 Edson Borin -- edson@ic.unicamp.br
-Copyright (c) 2016 João Batista C. G. Moreira -- joao.moreira@lsc.ic.unicamp.br
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -32,10 +31,30 @@ MODIFY strings).
 
 *************************************************************************/
 
-#include <esp8266_ble.h>
+#include <arduino_mqtt.h>
 #include <esp8266_provider.h>
+#include <esp8266_wifi.h>
 #include <libMiletus.h>
 
+/* MODIFY: Modify this macro with your WiFi SSID */
+#define WIFI_SSID "MY_WIFI_SSID"
+/* MODIFY: Modify this macro with your WiFi password */
+#define WIFI_PASSWORD "MY_WIFI_PASSWORD"
+
+/* MODIFY: Modify this macro with your MQTT broker address */
+/* test.mosquitto.org is equivalent to 37.187.106.16 */
+#define MQTT_SERVER "test.mosquitto.org"
+/* MODIFY: Modify this macro with your MQTT broker port */
+#define MQTT_PORT 1883
+
+/* The frequency for checking updates in the sensor*/
+#define UPDATE_INTERVAL_MS 2000
+/* Global variable indicating the timestamp of the last update*/
+long lastUpdate = 0;
+
+WiFiClient espClient;
+
+/* MODIFY: Modify this macro with your device's name */
 #define DEVICE_NAME "My_Favorite_IOT_Device"
 
 /* Global variable indicating the current LED state. False == off, true == on.*/
@@ -95,15 +114,21 @@ void setup() {
 
   /* Create a communication interface and add it to the device.
    * Using ESP8266 Wifi Interface. */
-  esp8266_ble *myBleIf = new esp8266_ble(DEVICE_NAME);
-  _myDevice.addCommInterface(myBleIf);
+  esp8266_wifi *myWifiIf =
+      new esp8266_wifi(DEVICE_NAME, WIFI_SSID, WIFI_PASSWORD);
+  _myDevice.addCommInterface(myWifiIf);
 
+  /* Create a communication interface and add it to the device.
+   * Using a ESP8266 Wifi client. */
+  arduino_mqtt *myMQTT = new arduino_mqtt(espClient, MQTT_SERVER, MQTT_PORT,
+                                          DEVICE_NAME, DEVICE_NAME);
+  _myDevice.addCommInterface(myMQTT);
+  Serial.println("Setup Done");
   /* Defines LED pin as an putput */
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
-  delay(100);
   /* Let libMiletus handle requests. */
   _myDevice.handleEvents();
 }

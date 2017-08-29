@@ -32,14 +32,15 @@ MODIFY strings).
 
 *************************************************************************/
 
-#include <libMiletus.h>
-#include <esp8266_wifi.h>
 #include <esp8266_provider.h>
+#include <esp8266_wifi.h>
+#include <libMiletus.h>
 
 /* MODIFY: Modify this macro with your WiFi SSID */
 #define WIFI_SSID "MY_WIFI_SSID"
 /* MODIFY: Modify this macro with your WiFi password */
 #define WIFI_PASSWORD "MY_WIFI_PASSWORD"
+
 #define DEVICE_NAME "My_Favorite_IOT_Device"
 
 /* Global variable indicating the current LED state. False == off, true == on.*/
@@ -49,7 +50,7 @@ bool LEDstate = false;
 MiletusDevice _myDevice(DEVICE_NAME);
 
 /* Component. In this example, the IoT device has a single component. */
-const char * kComponentName = "lamp";
+const char *kComponentName = "lamp";
 
 char kTraits[] = R"({
   "lamp": {
@@ -69,18 +70,19 @@ char kTraits[] = R"({
   }
 })";
 
-bool toggleLED_handler(Command& command)
-{
+bool toggleLED_handler(Command &command) {
   LEDstate = !LEDstate;
 
   /* Turn on/off the NodeMCU LED. */
   digitalWrite(LED_BUILTIN, LEDstate);
 
+  /* Update device's state. */
+  _myDevice.setState(kComponentName, "lamp", "LEDstatus", LEDstate);
+
   return true;
 }
 
-void setup()
-{
+void setup() {
   /* Add basic hardware features provider. */
   _myDevice.setProvider(new ESP8266MiletusProvider());
 
@@ -88,8 +90,8 @@ void setup()
   _myDevice.loadJsonTraits(kTraits);
 
   /* Add a component to the device. */
-  Component* lamp = new Component(kComponentName);
-  list<const char*> traits_list;
+  Component *lamp = new Component(kComponentName);
+  list<const char *> traits_list;
   traits_list.push_back("lamp");
   _myDevice.addComponent(lamp, traits_list);
 
@@ -98,17 +100,15 @@ void setup()
 
   /* Create a communication interface and add it to the device.
    * Using ESP8266 Wifi Interface. */
-  esp8266_wifi *myWifiIf = new esp8266_wifi(DEVICE_NAME,
-                                            WIFI_SSID,
-                                            WIFI_PASSWORD);
+  esp8266_wifi *myWifiIf =
+      new esp8266_wifi(DEVICE_NAME, WIFI_SSID, WIFI_PASSWORD);
   _myDevice.addCommInterface(myWifiIf);
 
   /* Defines LED pin as an putput */
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
-void loop()
-{
+void loop() {
   delay(100);
   /* Let libMiletus handle requests. */
   _myDevice.handleEvents();

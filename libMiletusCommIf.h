@@ -23,58 +23,60 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef libMiletus_CommIf_H
-#define libMiletus_CommIf_H
+#ifndef LIB_MILETUS_COMM_IF_H
+#define LIB_MILETUS_COMM_IF_H
 
+// TODO remove the ifdef adding ArduinoJson directory while compiling
 #include <string>
+#ifdef ARDUINO
+#include <ArduinoJson.h>
+#else
+#include "linux/third-party/ArduinoJson/ArduinoJson.h"
+#endif
 
-#define TCP_SERVER_PROT 80
-#define MDNS_PROT 80
+#define TCP_SERVER_PORT 1969
+#define MDNS_PORT 1969
 #define LIBMILETUS_MDNS_SUFIX "_miletus"
 
-#define NOCLIENT            0
-#define UNKNOWN             1
+#define NOCLIENT 0
+#define UNKNOWN 1
 // Reserved       2...19
-#define INFO                20
-#define TRAITS              21
-#define COMPONENTS          22
-#define COMMANDS            23
-#define COMMAND_EXECUTE     1
-#define COMMAND_STATUS      2
-#define COMMAND_LIST        3
-#define COMMAND_CANCEL      4
-#define TRANSPORT_WIFI      1
-#define TRANSPORT_BLE       2
+#define INFO 20
+#define TRAITS 21
+#define COMPONENTS 22
+#define COMMANDS 23
+#define COMMAND_EXECUTE 1
+#define COMMAND_STATUS 2
+#define COMMAND_LIST 3
+#define COMMAND_CANCEL 4
 
+enum class TransportClass { CLOUD, LAN, BLE };
 
 class MiletusDeviceCommIf;
 
-struct RequestT
-{
+struct RequestT {
   int status;
-  MiletusDeviceCommIf * media;
+  MiletusDeviceCommIf *media;
   int commandID;
   std::string commandJson;
 };
 
-class MiletusDeviceCommIf
-{
- public:
+class MiletusDeviceCommIf {
+public:
   MiletusDeviceCommIf() {}
 
-  bool initialized;
-  std::string commName;
+  bool initialized = false;
+  TransportClass deviceTransportClass;
 
   /* Returns 0 if OK, != 0 otherwise.
    * -1 Unknown command received
    * -2...
    */
-
   virtual int handleEvent(RequestT *) = 0;
+  // TODO: Change String to JsonObject
   virtual bool sendJsonToClient(std::string json) = 0;
   virtual bool sendErrorToClient() = 0;
 
- private:
 };
 
-#endif // libMiletus_CommIf_H
+#endif // LIB_MILETUS_COMM_IF_H

@@ -1,8 +1,7 @@
 /*************************************************************************
 The MIT License (MIT)
-Copyright (c) 2016 Jeferson Rech Brunetta -- ra161253@students.ic.unicamp.br
-Copyright (c) 2016 Edson Borin -- edson@ic.unicamp.br
-Copyright (c) 2016 João Batista C. G. Moreira -- joao.moreira@lsc.ic.unicamp.br
+Copyright (c) 2017 Jeferson Rech Brunetta -- ra161253@students.ic.unicamp.br
+Copyright (c) 2017 Edson Borin -- edson@ic.unicamp.br
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -23,34 +22,38 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef ESP8266_WIFI_H
-#define ESP8266_WIFI_H
+#ifndef ARDUINO_MQTT_H
+#define ARDUINO_MQTT_H
 
-#include "libMiletusCommIf.h"
-//#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-//#include <string>
+#include <Arduino.h>
+#include <PubSubClient.h>
+#include <libMiletusPubSubIf.h>
 
-#ifndef HTTP_HEADER
-#define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"
-#endif
-#ifndef HTTP_HEADER_ERROR
-#define HTTP_HEADER_ERROR "HTTP/1.1 404 Not Found\r\n\r\n"
+#ifndef MAX_RECONNECTION_ATTEMPTS
+#define MAX_RECONNECTION_ATTEMPTS 5
 #endif
 
-class esp8266_wifi : public MiletusDeviceCommIf {
+class arduino_mqtt : public MiletusPubSubIf {
 public:
-  esp8266_wifi(const char *deviceName, const char *ssid, const char *password,
-               const uint8_t *ip_vet = 0, const uint8_t *gateway_vet = 0,
-               const uint8_t *subnet_vet = 0);
-  ~esp8266_wifi(){};
+  arduino_mqtt(Client &_network_client, const char *mqtt_server, int mqtt_port,
+               const char *device_topic_name, const char *mqtt_username);
+  ~arduino_mqtt(){};
   int handleEvent(RequestT *);
   bool sendJsonToClient(std::string json);
   bool sendErrorToClient();
+  bool publish(const char *topic, const char *json, bool retained = 0);
+  void pubsub_callback(char *topic, uint8_t *payload, unsigned int length);
+  static arduino_mqtt *callback_obj;
 
 private:
-  WiFiServer server{TCP_SERVER_PORT};
-  WiFiClient client;
+  bool connect();
+  bool reconnect();
+  PubSubClient pubsub_client;
+  const char *device_topic_name;
+  const char *mqtt_username;
+  const char *mqtt_server;
+  int mqtt_port;
+  RequestT *current_request;
 };
 
-#endif // ESP8266_WIFI_H
+#endif // ARDUINO_MQTT_H

@@ -1,0 +1,32 @@
+<version>
+    1.0.4
+</version>
+
+<headers>
+    {RELPATH}/libMiletus.h
+    {RELPATH}/libMiletusCommIf.h
+    {RELPATH}/libMiletusProvider.h
+</headers>
+
+<libs>
+    {RELPATH}/linux/bin/
+</libs>
+
+<libs_depend>
+    {RELPATH}/linux/bin/sharedlibrary.so
+</libs_depend>
+
+<skip_headers>
+    {RELPATH}/b64/
+    {RELPATH}/linux/third-party/ArduinoJson/
+    {RELPATH}/esp8266_ble.h
+    {RELPATH}/esp8266_provider.h
+    {RELPATH}/esp8266_wifi.h
+    {RELPATH}/libMiletusPubSubIf.h
+    {RELPATH}/arduino_mqtt.h
+
+</skip_headers>
+
+<gcc_options>
+    -DBUFFERSIZE=16777216
+</gcc_options>

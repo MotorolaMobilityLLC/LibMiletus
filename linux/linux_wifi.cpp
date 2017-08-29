@@ -35,86 +35,62 @@ MODIFY strings).
 
 class MiletusDeviceCommIf;
 
-linux_wifi::linux_wifi () {
-  //TODO: Start mDNS
+linux_wifi::linux_wifi() {
+  // TODO: Start mDNS
 
   // Start TCP (HTTP) server
   server.begin();
 
+  deviceTransportClass = TransportClass::LAN;
   initialized = true;
-
-  // TODO: Is a name useful??
-  commName = "linux";
 }
 
-/*
-POST /commands/execute HTTP/1.1
-Host: 127.0.0.1:8000
-User-Agent: curl/7.47.0
-Accept: * / *
-Content-Type: application/json
-Content-Length: 46
-
-{"name":"lamp.toggleLED","component":"sensor"}*/
-
-/*
-GET /components HTTP/1.1
-Host: 127.0.0.1:8000
-User-Agent: curl/7.47.0
-Accept: * / *
-*/
-
-int linux_wifi::handleEvent(RequestT * request){
+int linux_wifi::handleEvent(RequestT *request) {
   fprintf(stderr, ".");
   client = server.available();
-  if(!client.available()){
+  if (!client.available()) {
     request->status = NOCLIENT;
     return 1;
   }
   string msg = client.readString();
-  fprintf(stderr, "MSG: %s", msg.c_str());
-  
+  fprintf(stderr, "MSG: %s\n", msg.c_str());
 
   size_t get_pos = msg.find("GET /");
   size_t post_pos = msg.find("POST /");
-  if (get_pos != string::npos){
+  if (get_pos != string::npos) {
     // It is a GET message
-    if (msg.find("info", get_pos+5) != string::npos){
+    if (msg.find("info", get_pos + 5) != string::npos) {
       request->status = INFO;
       return 0;
     }
-    if (msg.find("traits", get_pos+5) != string::npos){
+    if (msg.find("traits", get_pos + 5) != string::npos) {
       request->status = TRAITS;
       return 0;
     }
-    if (msg.find("components", get_pos+5) != string::npos){
+    if (msg.find("components", get_pos + 5) != string::npos) {
       request->status = COMPONENTS;
       return 0;
     }
-  }
-  else if(post_pos != string::npos){
+  } else if (post_pos != string::npos) {
     // It is a POST message
-    if (msg.find("application/json", get_pos+5) == string::npos){
+    if (msg.find("application/json", get_pos + 5) == string::npos) {
       request->status = UNKNOWN;
       return -1;
     }
-    msg = msg.substr(post_pos+5);
+    msg = msg.substr(post_pos + 5);
     size_t cmd_pos = msg.find(" ");
     string url = msg.substr(0, cmd_pos);
-    
-    if (url.find("commands") != string::npos){
-      if (url.find("commands/execute") != string::npos){
+
+    if (url.find("commands") != string::npos) {
+      if (url.find("commands/execute") != string::npos) {
         request->commandID = COMMAND_EXECUTE;
-      }
-      else if (url.find("commands/status") != string::npos){
+      } else if (url.find("commands/status") != string::npos) {
         request->commandID = COMMAND_STATUS;
-      }
-      else if (url.find("commands/list") != string::npos){
+      } else if (url.find("commands/list") != string::npos) {
         request->commandID = COMMAND_LIST;
-      }
-      else if (url.find("commands/cancel") != string::npos){
+      } else if (url.find("commands/cancel") != string::npos) {
         request->commandID = COMMAND_CANCEL;
-      }else{
+      } else {
         request->status = UNKNOWN;
         return -1;
       }
@@ -129,14 +105,14 @@ int linux_wifi::handleEvent(RequestT * request){
   return -1;
 }
 
-bool linux_wifi::sendJsonToClient(std::string json){
+bool linux_wifi::sendJsonToClient(std::string json) {
   client.print(HTTP_HEADER);
   client.print(json.c_str());
   client.stop();
   return true;
 }
 
-bool linux_wifi::sendErrorToClient(){
+bool linux_wifi::sendErrorToClient() {
   client.print(HTTP_HEADER_ERROR);
   client.stop();
   return true;

@@ -23,10 +23,14 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef libMiletusProvider_H
-#define libMiletusProvider_H
+#ifndef LIB_MILETUS_PROVIDER_H
+#define LIB_MILETUS_PROVIDER_H
 
+#include <stdio.h>
+#include <string.h> // Needed by ArduinoJson DummyPrint.
 #include <string>
+
+#define DEBUG 1
 
 #define STRSIZE 20
 
@@ -36,14 +40,19 @@ using namespace std;
  * This class devides the hardware specific features required to
  * support the libMiletus device operation.
  */
-class MiletusProvider
-{
+class MiletusProvider {
 public:
-  MiletusProvider() {};
+  MiletusProvider(){};
+
+  virtual ~MiletusProvider(){};
+
   /*
    * Prints a message for debugging.
    */
-  virtual void printdbg(string msg) {}
+  virtual void printdbg(const char *msg) {
+    if (DEBUG)
+      printf("%s\n", msg);
+  }
   /*
    * Prints the amount of free memory on the heap.
    */
@@ -54,4 +63,4 @@ public:
   virtual uint32_t getRand() { return 0; }
 };
 
-#endif // libMiletusProvider_H
+#endif // LIB_MILETUS_PROVIDER_H
