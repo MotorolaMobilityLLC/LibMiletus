@@ -32,10 +32,10 @@ the setting of your wifi network (Hint: look for MODIFY strings).
 
 *************************************************************************/
 
-#include <libMiletus.h>
-#include <esp8266_wifi.h>
-#include <esp8266_provider.h>
 #include "DHT.h"
+#include <esp8266_provider.h>
+#include <esp8266_wifi.h>
+#include <libMiletus.h>
 
 /* MODIFY: Modify this macro with your WiFi SSID */
 #define WIFI_SSID "MY_WIFI_SSID"
@@ -47,6 +47,11 @@ the setting of your wifi network (Hint: look for MODIFY strings).
 #define DHTPIN D2
 /* MODIFY: Modify this macro with your DHT model */
 #define DHTTYPE DHT11
+
+/* The frequency for checking updates in the sensor*/
+#define UPDATE_INTERVAL_MS 2000
+/* Global variable indicating the timestamp of the last update*/
+long lastUpdate = 0;
 
 /* Global variable indicating the current LED state. False == off, true == on.*/
 bool LEDstate = false;
@@ -62,7 +67,7 @@ MiletusDevice _myDevice(DEVICE_NAME);
 DHT dht(DHTPIN, DHTTYPE);
 
 /* Component. In this example, the IoT device has a single component. */
-const char * kComponentName = "sensor";
+const char *kComponentName = "sensor";
 
 char kTraits[] = R"({
   "DHT": {
@@ -97,8 +102,7 @@ char kTraits2[] = R"({
   }
 })";
 
-void setup()
-{
+void setup() {
   /* Add basic hardware features provider. */
   _myDevice.setProvider(new ESP8266MiletusProvider());
 
@@ -107,43 +111,44 @@ void setup()
   _myDevice.loadJsonTraits(kTraits2);
 
   /* Add a component to the device. */
-  Component* sensor = new Component(kComponentName);
-  list<const char*> traits_list;
+  Component *sensor = new Component(kComponentName);
+  list<const char *> traits_list;
   traits_list.push_back("DHT");
   traits_list.push_back("lamp");
   _myDevice.addComponent(sensor, traits_list);
 
   /* Create a communication interface and add it to the device.
    * Using ESP8266 Wifi Interface. */
-  esp8266_wifi *myWifiIf = new esp8266_wifi(DEVICE_NAME,
-                                            WIFI_SSID,
-                                            WIFI_PASSWORD);
+  esp8266_wifi *myWifiIf =
+      new esp8266_wifi(DEVICE_NAME, WIFI_SSID, WIFI_PASSWORD);
   _myDevice.addCommInterface(myWifiIf);
 
   /* Defines LED pin as an putput */
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
-void updateDHT(){
+void updateDHT() {
   float h = dht.readHumidity();
   float t = dht.readTemperature(false);
   if (!isnan(h) && !isnan(t)) {
-    if (t != temperature){
+    if (t != temperature) {
       temperature = t;
-      _myDevice.setState(kComponentName, "DHT", "temperature" , t);
+      _myDevice.setState(kComponentName, "DHT", "temperature", t);
     }
-    if (humidity != h){
+    if (humidity != h) {
       humidity = h;
-      _myDevice.setState(kComponentName, "DHT", "humidity" , h);
+      _myDevice.setState(kComponentName, "DHT", "humidity", h);
     }
   }
 }
 
-void loop()
-{
-  delay(100);
+void loop() {
+  /* Check for updates on DHT sensor. */
+  long now = millis();
+  if (now - lastUpdate > UPDATE_INTERVAL_MS) {
+    lastUpdate = now;
+    updateDHT();
+  }
   /* Let libMiletus handle requests. */
   _myDevice.handleEvents();
-  /* Check for updates on DHT sensor. */
-  updateDHT();
 }

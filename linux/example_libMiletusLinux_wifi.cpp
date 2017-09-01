@@ -33,8 +33,9 @@ look for MODIFY strings).
 *************************************************************************/
 
 #include "../libMiletus.h"
-#include "linux_wifi.h"
 #include "linux_provider.h"
+#include "linux_wifi.h"
+#include <iostream>
 
 #define DEVICE_NAME "My_Favorite_IOT_Device"
 
@@ -43,10 +44,10 @@ float temperature = 0;
 float humidity = 0;
 
 /* This is the LibMiletus IoT device. */
-MiletusDevice _myDevice(DEVICE_NAME);
+MiletusDevice *_myDevice;
 
 /* Component. In this example, the IoT device has a single component. */
-const char * kComponentName = "sensor";
+const char *kComponentName = "sensor";
 
 char kTraits[] = R"({
   "sensors": {
@@ -60,7 +61,8 @@ char kTraits[] = R"({
     "state": {
       "temperature": {
         "isRequired": true,
-        "type": "number"
+        "type": "number",
+        "unity": "celsius"
       },
       "humidity": {
         "isRequired": true,
@@ -70,43 +72,42 @@ char kTraits[] = R"({
   }
 })";
 
-bool toggleLED_handler(Command& command)
-{
+bool toggleLED_handler(Command &command) {
   printf("I'm called\n");
   command.appendResult("CurrentTemp", temperature);
   return true;
 }
 
-void updateSensors(){
-  temperature+= 0.1;
-  humidity+= 0.15;
-  _myDevice.setState(kComponentName, "sensors", "temperature" , temperature);
-  _myDevice.setState(kComponentName, "sensors", "humidity" , humidity);
+void updateSensors() {
+  temperature += 0.5;
+  humidity += 0.15;
+  _myDevice->setState(kComponentName, "sensors", "temperature", temperature);
+  _myDevice->setState(kComponentName, "sensors", "humidity", humidity);
 }
 
-void loop()
-{
-  /* Delay 50 ms */
-  sleep(1);
+void loop() {
+  /* Delay 200 ms */
+  usleep(200);
   /* Let libMiletus handle requests. */
-  _myDevice.handleEvents();
+  _myDevice->handleEvents();
   /* Check for updates on DHT sensor. */
   updateSensors();
 }
 
-int main()
-{
+int main() {
+  _myDevice = new MiletusDevice(DEVICE_NAME);
+
   /* Add basic hardware features provider. */
-  _myDevice.setProvider(new linuxMiletusProvider());
+  _myDevice->setProvider(new linuxMiletusProvider());
 
   /* Load device traits. */
-  _myDevice.loadJsonTraits(kTraits);
+  _myDevice->loadJsonTraits(kTraits);
 
   /* Add a component to the device. */
-  Component* component = new Component(kComponentName);
-  list<const char*> traits_list;
+  Component *component = new Component(kComponentName);
+  list<const char *> traits_list;
   traits_list.push_back("sensors");
-  _myDevice.addComponent(component, traits_list);
+  _myDevice->addComponent(component, traits_list);
 
   /* Map commant to handler. */
   component->setCommand("sensors", "toggleLED", toggleLED_handler);
@@ -114,9 +115,9 @@ int main()
   /* Create a communication interface and add it to the device.
    * Using ESP8266 Wifi Interface. */
   linux_wifi *myWifiIf = new linux_wifi();
-  _myDevice.addCommInterface(myWifiIf);
+  _myDevice->addCommInterface(myWifiIf);
 
-  while(1){
+  while (1) {
     loop();
   }
 }

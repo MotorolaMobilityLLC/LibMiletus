@@ -34,16 +34,16 @@ MODIFY strings).
 
 #include "linux_wrapper.h"
 
-int main(){
+int main() {
   LinuxServer s(8000);
   s.begin();
-  while(true){
+  while (true) {
     fprintf(stderr, ".");
     LinuxClient c = s.available();
-    if(c.available()){
+    if (c.available()) {
       std::string msg = c.extractHTTPCmd(c.readString());
       fprintf(stderr, "MSG: %s", msg.c_str());
-      if(msg.compare("traits")==0){
+      if (msg.compare("traits") == 0) {
         c.print("uhuuuuuull\n");
       } else {
         c.print("command not found dude!\n");

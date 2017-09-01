@@ -23,8 +23,8 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef esp8266Provider_H
-#define esp8266Provider_H
+#ifndef ESP8266_PROVIDER_H
+#define ESP8266_PROVIDER_H
 
 #include "libMiletusProvider.h"
 
@@ -34,8 +34,7 @@ using namespace std;
  * This class devides the hardware specific features required to
  * support the libMiletus device operation.
  */
-class ESP8266MiletusProvider : public MiletusProvider
-{
+class ESP8266MiletusProvider : public MiletusProvider {
 public:
   ESP8266MiletusProvider(){};
   /*
@@ -52,5 +51,4 @@ public:
   uint32_t getRand();
 };
 
-
-#endif // esp8266Provider_H
+#endif // ESP8266_PROVIDER_H

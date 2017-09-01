@@ -33,17 +33,28 @@ MODIFY strings).
 *************************************************************************/
 
 #include "linux_wrapper.h"
+//#include <errno.h>
 
-bool LinuxServer::begin(){
+bool LinuxServer::begin() {
   this->current_status = 0;
   this->socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if(this->socket_fd < 0){
-    fprintf(stderr, "Error creating socket on Server\n");
+  if (this->socket_fd < 0) {
+    fprintf(stderr, "Error creating socket on Server (%s).\n", strerror(errno));
+    return false;
+  }
+
+  // Allows the socket port to be reused to avoid having to wait to restart the
+  // server.
+  int yes = 1;
+  if (setsockopt(this->socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) <
+      0) {
+    fprintf(stderr, "Error setting socket options on Server (%s).\n",
+            strerror(errno));
     return false;
   }
 
   fcntl(this->socket_fd, F_SETFL, O_NONBLOCK);
-  bzero((char *) &addr, sizeof(addr));
+  bzero((char *)&addr, sizeof(addr));
 
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
@@ -51,8 +62,8 @@ bool LinuxServer::begin(){
 
   fprintf(stderr, "Listening on port: %d\n", this->port);
 
-  if(bind(this->socket_fd, (struct sockaddr *) &addr, sizeof(addr))<0){
-    fprintf(stderr, "Error binding socket on Server\n");
+  if (bind(this->socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    fprintf(stderr, "Error binding socket on Server (%s).\n", strerror(errno));
     return false;
   }
   listen(this->socket_fd, 7);
@@ -60,60 +71,52 @@ bool LinuxServer::begin(){
   return true;
 }
 
-LinuxClient LinuxServer::available(){
+LinuxClient LinuxServer::available() {
   int receiver;
   struct sockaddr_in client;
 
   socklen_t client_length = sizeof(client);
-  receiver = accept(socket_fd, (struct sockaddr *) &client, &client_length);
-    if(receiver > 0){
-      return LinuxClient(receiver);
-    }
+  receiver = accept(socket_fd, (struct sockaddr *)&client, &client_length);
+  if (receiver > 0) {
+    return LinuxClient(receiver);
+  }
   return LinuxClient(0);
 }
 
-void LinuxServer::stop(){
+void LinuxServer::stop() {
   close(this->socket_fd);
   this->current_status = 0;
 }
 
-uint8_t LinuxServer::status(){
-  return this->current_status;
-}
+uint8_t LinuxServer::status() { return this->current_status; }
 
 // CLIENT
-std::string LinuxClient::readString(){
+std::string LinuxClient::readString() {
   int len;
-  char buffer[256];
-  len = recv(this->client_fd, buffer, (size_t) 255, 0);
-  if(len < 0){
-    fprintf(stderr, "Error reading from client\n");
+  char buffer[80906];
+  len = recv(this->client_fd, buffer, (size_t)80905, 0);
+  if (len < 0) {
+    fprintf(stderr, "Error reading from client (%s).\n", strerror(errno));
     return NULL;
   }
   std::string msg = buffer;
   return msg;
 }
 
-std::string LinuxClient::extractHTTPCmd(std::string msg){
+std::string LinuxClient::extractHTTPCmd(std::string msg) {
   size_t get_pos = msg.find("GET /");
-  msg = msg.substr(get_pos+5);
+  msg = msg.substr(get_pos + 5);
   size_t cmd_pos = msg.find(" ");
   msg = msg.substr(0, cmd_pos);
   return msg;
 }
 
-void LinuxClient::print(std::string msg){
-  send(this->client_fd, msg.c_str(), (size_t) msg.length(), 0);
+void LinuxClient::print(std::string msg) {
+  send(this->client_fd, msg.c_str(), (size_t)msg.length(), 0);
 }
 
-int LinuxClient::available(){
-  return this->client_fd;
-}
+int LinuxClient::available() { return this->client_fd; }
 
-void LinuxClient::flush(){
-  shutdown(client_fd, SHUT_WR);
-}
+void LinuxClient::flush() { shutdown(client_fd, SHUT_WR); }
 
-void LinuxClient::stop(){
-  close(client_fd);
-}
+void LinuxClient::stop() { close(client_fd); }

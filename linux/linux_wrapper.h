@@ -31,64 +31,64 @@ the code to reflect the setting of your wifi network (Hint: look for
 MODIFY strings).
 
 *************************************************************************/
+#ifndef linux_WRAPPER_H
+#define linux_WRAPPER_H
 
-#include <stdio.h>
+//#include <stdio.h>
+#include <string.h> // Needed by ArduinoJson DummyPrint.
 #include <string>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netdb.h>
+//#include <sys/socket.h>
+//#include <sys/types.h>
+//#include <netdb.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <strings.h>
+//#include <strings.h>
+#include <errno.h>
 
 class LinuxClient;
 class LinuxServer;
 
-class LinuxServer{
-
+class LinuxServer {
 private:
-	uint16_t port;
-	struct sockaddr_in addr;
-	int socket_fd;
-        int current_status = 0;
+  uint16_t port;
+  struct sockaddr_in addr;
+  int socket_fd;
+  int current_status = 0;
 
 public:
-	LinuxServer(uint16_t port){
-		this->port = port;
-	};
+  LinuxServer(uint16_t port) { this->port = port; };
 
-	LinuxClient available();
-	bool begin();
-	//size_t write(uint8_t);
-	//size_t write(const uint8_t *buf, size_t size);
-	uint8_t status();
-	void stop();
+  LinuxClient available();
+  bool begin();
+  // size_t write(uint8_t);
+  // size_t write(const uint8_t *buf, size_t size);
+  uint8_t status();
+  void stop();
 };
 
-class LinuxClient{
-
+class LinuxClient {
 private:
-	uint16_t rport;
-	uint16_t lport;
-	int client_fd;
+  uint16_t rport;
+  uint16_t lport;
+  int client_fd;
 
 public:
-	LinuxClient(){};
-	LinuxClient(int client_fd){
-		this->client_fd = client_fd;
-	};
+  LinuxClient(){};
+  LinuxClient(int client_fd) { this->client_fd = client_fd; };
 
-	uint8_t status();
-	//size_t write(uint8_t);
-	//size_t write(const uint8_t *buf, size_t size);
-        void print(std::string msg);
-	int available();
-        std::string readString();
-        std::string extractHTTPCmd(std::string msg);
-	//int readStr(uint8_t *buf, size_t size);
-	//std::string readStringUntil(char c);
-	void flush();
-	void stop();
-	uint8_t connected();
+  uint8_t status();
+  // size_t write(uint8_t);
+  // size_t write(const uint8_t *buf, size_t size);
+  void print(std::string msg);
+  int available();
+  std::string readString();
+  std::string extractHTTPCmd(std::string msg);
+  // int readStr(uint8_t *buf, size_t size);
+  // std::string readStringUntil(char c);
+  void flush();
+  void stop();
+  uint8_t connected();
 };
+
+#endif // linux_WRAPPER_H

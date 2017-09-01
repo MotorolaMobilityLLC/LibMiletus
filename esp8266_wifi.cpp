@@ -23,21 +23,14 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#include <esp8266_wifi.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-#include <WiFiClient.h>
-#include <string>
+#include "esp8266_wifi.h"
 
 class MiletusDeviceCommIf;
 
-esp8266_wifi::esp8266_wifi (const char* deviceName,
-                            const char* ssid,
-                            const char *password,
-                            const uint8_t *ip_vet,
-                            const uint8_t *gateway_vet,
-                            const uint8_t *subnet_vet)
-  {
+esp8266_wifi::esp8266_wifi(const char *deviceName, const char *ssid,
+                           const char *password, const uint8_t *ip_vet,
+                           const uint8_t *gateway_vet,
+                           const uint8_t *subnet_vet) {
   yield();
   if (ip_vet && gateway_vet && subnet_vet) {
     IPAddress ip(ip_vet);
@@ -47,7 +40,7 @@ esp8266_wifi::esp8266_wifi (const char* deviceName,
     WiFi.config(ip, gateway, subnet);
   }
   Serial.print("Connecting...\n");
-  WiFi.begin((char*)ssid, password);
+  WiFi.begin((char *)ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print("-");
     delay(500);
@@ -67,31 +60,31 @@ esp8266_wifi::esp8266_wifi (const char* deviceName,
   server.begin();
 
   // Add service to MDNS-SD
-  MDNS.addService("http", "tcp", MDNS_PROT);
+  MDNS.addService("http", "tcp", MDNS_PORT);
   initialized = true;
-  // TODO: Is a name useful??
-  commName = "ESP8266";
+  deviceTransportClass = TransportClass::LAN;
   yield();
 }
 
-int esp8266_wifi::handleEvent(RequestT * request){
+int esp8266_wifi::handleEvent(RequestT *request) {
   yield();
   client = server.available();
   client.setNoDelay(false);
+  client.setTimeout(50);
   if (!client) {
     client.stop();
     request->status = NOCLIENT;
     return 1;
   }
-  
+
   // Wait for data from client to become available
-  while(client.connected() && !client.available()){
+  while (client.connected() && !client.available()) {
     yield();
   }
   // Read the first line of HTTP request
   String req = client.readStringUntil('\r');
   String req2 = "";
-  if (req.indexOf("POST")==0){
+  if (req.indexOf("POST") == 0) {
     req2 = client.readString();
     Serial.println("Command:");
     Serial.println(req2);
@@ -106,61 +99,49 @@ int esp8266_wifi::handleEvent(RequestT * request){
   }
   req = req.substring(addr_start + 1, addr_end);
   client.flush();
-  if (req == "/info")
-  {
+  if (req == "/info") {
     request->status = INFO;
     return 0;
-  }
-  else if (req == "/traits")
-  {
+  } else if (req == "/traits") {
     request->status = TRAITS;
     return 0;
-  }
-  else if (req == "/components")
-  {
+  } else if (req == "/components") {
     request->status = COMPONENTS;
     return 0;
-  }
-  else if (req.indexOf("/commands")==0)
-  {
-    if (req2.indexOf("application/json") < 0){
+  } else if (req.indexOf("/commands") == 0) {
+    if (req2.indexOf("application/json") < 0) {
       request->status = UNKNOWN;
       return -1;
     }
-    req2 = req2.substring(req2.indexOf("\r\n\r\n")+4);
+    req2 = req2.substring(req2.indexOf("\r\n\r\n") + 4);
     // Request2 now contains the body of HTTP POST
-    char * httpBody = new char [req2.length()+1];
-    req2.toCharArray(httpBody, req2.length()+1);
+    char *httpBody = new char[req2.length() + 1];
+    req2.toCharArray(httpBody, req2.length() + 1);
     request->commandJson = httpBody;
     delete[] httpBody;
 
     request->status = COMMANDS;
-    if (req.indexOf("/commands/execute")==0){
+    if (req.indexOf("/commands/execute") == 0) {
       request->commandID = COMMAND_EXECUTE;
-    }
-    else if (req.indexOf("/commands/status")==0){
+    } else if (req.indexOf("/commands/status") == 0) {
       request->commandID = COMMAND_STATUS;
-    }
-    else if (req.indexOf("/commands/list")==0){
+    } else if (req.indexOf("/commands/list") == 0) {
       request->commandID = COMMAND_LIST;
-    }
-    else if (req.indexOf("/commands/cancel")==0){
+    } else if (req.indexOf("/commands/cancel") == 0) {
       request->commandID = COMMAND_CANCEL;
     }
     return 0;
-  }
-  else
-  {
+  } else {
     request->status = UNKNOWN;
     return -1;
   }
   return 0;
 }
 
-bool esp8266_wifi::sendJsonToClient(std::string json){
-  yield();// yield to allow ESP8266 background functions
+bool esp8266_wifi::sendJsonToClient(std::string json) {
+  yield(); // yield to allow ESP8266 background functions
   client.print(HTTP_HEADER);
-  const char * jsonC = json.c_str();
+  const char *jsonC = json.c_str();
   client.print(jsonC);
   client.flush();
   client.stop();
@@ -168,8 +149,8 @@ bool esp8266_wifi::sendJsonToClient(std::string json){
   Serial.printf("sendJsonToClient heap size: %u\n", ESP.getFreeHeap());
 }
 
-bool esp8266_wifi::sendErrorToClient(){
-  yield();// yield to allow ESP8266 background functions
+bool esp8266_wifi::sendErrorToClient() {
+  yield(); // yield to allow ESP8266 background functions
   client.print(HTTP_HEADER_ERROR);
   client.flush();
   client.stop();

@@ -23,10 +23,12 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef linuxProvider_H
-#define linuxProvider_H
+#ifndef LINUX_PROVIDER_H
+#define LINUX_PROVIDER_H
 
 #include "../libMiletusProvider.h"
+#include <stdlib.h> /* rand */
+#include <time.h>   /* time */
 
 using namespace std;
 
@@ -34,14 +36,13 @@ using namespace std;
  * This class devides the hardware specific features required to
  * support the libMiletus device operation.
  */
-class linuxMiletusProvider : public MiletusProvider
-{
+class linuxMiletusProvider : public MiletusProvider {
 public:
   linuxMiletusProvider(){};
   /*
    * Prints a message for debugging.
    */
-  void printdbg(string msg);
+  void printdbg(const char *msg);
   /*
    * Prints the amount of free memory on the heap.
    */
@@ -52,5 +53,4 @@ public:
   uint32_t getRand();
 };
 
-
-#endif // linuxProvider_H
+#endif // LINUX_PROVIDER_H

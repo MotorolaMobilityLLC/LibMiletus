@@ -31,8 +31,8 @@ command that toggles that defines the Edson's built-in LED.
 *************************************************************************/
 
 #include "../libMiletus.h"
-#include "linux_wifi.h"
 #include "linux_provider.h"
+#include "linux_wifi.h"
 #include <mraa.h>
 
 #define DEVICE_NAME "My_Favorite_IOT_Device"
@@ -43,10 +43,10 @@ bool led_state = false;
 static mraa_gpio_context led_pin;
 
 /* This is the LibMiletus IoT device. */
-MiletusDevice _myDevice(DEVICE_NAME);
+MiletusDevice *_myDevice;
 
 /* Component. In this example, the IoT device has a single component. */
-const char * kComponentName = "sensor";
+const char *kComponentName = "sensor";
 
 char kTraits[] = R"({
   "trait": {
@@ -60,48 +60,46 @@ char kTraits[] = R"({
   }
 })";
 
-bool toggleLED_handler(Command& command)
-{
+bool toggleLED_handler(Command &command) {
   printf("I'm called\n");
   led_state = !led_state;
   mraa_gpio_write(led_pin, led_state);
   return true;
 }
 
-
-void loop()
-{
+void loop() {
   /* Delay some ms */
   sleep(1);
   /* Let libMiletus handle requests. */
-  _myDevice.handleEvents();
+  _myDevice->handleEvents();
 }
 
-int main()
-{
+int main() {
+  _myDevice = new MiletusDevice(DEVICE_NAME);
+
   /* Add basic hardware features provider. */
-  _myDevice.setProvider(new linuxMiletusProvider());
+  _myDevice->setProvider(new linuxMiletusProvider());
 
   /* Load device traits. */
-  _myDevice.loadJsonTraits(kTraits);
+  _myDevice->loadJsonTraits(kTraits);
 
   /* Add a component to the device. */
-  Component* component = new Component(kComponentName);
-  list<const char*> traits_list;
+  Component *component = new Component(kComponentName);
+  list<const char *> traits_list;
   traits_list.push_back("trait");
-  _myDevice.addComponent(component, traits_list);
+  _myDevice->addComponent(component, traits_list);
 
   /* Map commant to handler. */
   component->setCommand("trait", "toggleLED", toggleLED_handler);
 
   /* Create a communication interface and add it to the device. */
   linux_wifi *myWifiIf = new linux_wifi();
-  _myDevice.addCommInterface(myWifiIf);
+  _myDevice->addCommInterface(myWifiIf);
 
   led_pin = mraa_gpio_init(BUILT_IN_LED);
   mraa_gpio_dir(led_pin, MRAA_GPIO_OUT);
 
-  while(1){
+  while (1) {
     loop();
   }
 }

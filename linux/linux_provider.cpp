@@ -24,16 +24,18 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
 #include "linux_provider.h"
-#include <stdio.h>
+//#include <stdio.h>
 
-void linuxMiletusProvider::printdbg(string msg){
-  printf("DEBUG:\n%s\n", msg.c_str());
+void linuxMiletusProvider::printdbg(const char *msg) {
+  if (DEBUG) {
+    printf("DEBUG:\n%s\n", msg);
+  }
 }
 
-uint32_t linuxMiletusProvider::getRand(){
-  return 12341234;
+uint32_t linuxMiletusProvider::getRand() {
+  /* initialize random seed: */
+  srand(time(NULL));
+  return rand();
 }
 
-void linuxMiletusProvider::printFreeHeap(){
-printf("Free heap size: XXXX\n");
-}
+void linuxMiletusProvider::printFreeHeap() { printf("Free heap size: XXXX\n"); }

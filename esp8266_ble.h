@@ -26,7 +26,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef ESP8266_BLE_H
 #define ESP8266_BLE_H
 
-#include <libMiletusCommIf.h>
+#include "libMiletusCommIf.h"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
@@ -42,17 +42,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define NUMBER_DIGITIS_SIZE 4
 
-class esp8266_ble : public MiletusDeviceCommIf
-{
+class esp8266_ble : public MiletusDeviceCommIf {
 public:
-  esp8266_ble(const char* deviceName);
+  esp8266_ble(const char *deviceName);
   ~esp8266_ble(){};
   int handleEvent(RequestT *);
   bool sendJsonToClient(std::string json);
   bool sendErrorToClient();
 
 private:
-  SoftwareSerial ble{14, 12, false, 256};
+  SoftwareSerial bleSerial{14, 12, false, 256};
 };
 
-#endif //ESP8266_BLE_H
+#endif // ESP8266_BLE_H

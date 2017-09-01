@@ -37,3 +37,4 @@
 # libMiletus specific files
 linux/third-party
 linux/build
+linux/bin/*

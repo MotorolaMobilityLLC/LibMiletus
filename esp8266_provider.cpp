@@ -27,17 +27,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "HardwareSerial.h"
 
-//TODO: Why this is included?
+// TODO: Why this is included?
 #include <ESP8266WiFi.h>
 
-void ESP8266MiletusProvider::printdbg(string msg){
+void ESP8266MiletusProvider::printdbg(string msg) {
   Serial.println(msg.c_str());
 }
 
-uint32_t ESP8266MiletusProvider::getRand(){
-  return os_random();
-}
+uint32_t ESP8266MiletusProvider::getRand() { return os_random(); }
 
-void ESP8266MiletusProvider::printFreeHeap(){
+void ESP8266MiletusProvider::printFreeHeap() {
   Serial.printf("Free heap size: %u\n", ESP.getFreeHeap());
 }

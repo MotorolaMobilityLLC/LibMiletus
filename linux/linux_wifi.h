@@ -27,9 +27,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define linux_WIFI_H
 
 #include "../libMiletusCommIf.h"
-#include "linux_wifi.h"
 #include "linux_wrapper.h"
-#include <string>
 
 #ifndef HTTP_HEADER
 #define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"
@@ -40,8 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 
-class linux_wifi : public MiletusDeviceCommIf
-{
+class linux_wifi : public MiletusDeviceCommIf {
 public:
   linux_wifi();
   ~linux_wifi(){};
@@ -50,8 +47,8 @@ public:
   bool sendErrorToClient();
 
 private:
-  LinuxServer server{TCP_SERVER_PROT};
+  LinuxServer server{TCP_SERVER_PORT};
   LinuxClient client;
 };
 
-#endif //linux_WIFI_H
+#endif // linux_WIFI_H

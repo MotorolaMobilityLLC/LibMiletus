@@ -23,29 +23,34 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *************************************************************************/
-#ifndef libMiletus_H
-#define libMiletus_H
+#ifndef LIB_MILETUS_H
+#define LIB_MILETUS_H
 
 #include "libMiletusCommIf.h"
 #include "libMiletusProvider.h"
-#include <map>
+#include "libMiletusPubSubIf.h"
+
 #include <list>
+#include <map>
 #include <string>
+
 #ifdef ARDUINO
 #include <ArduinoJson.h>
 #else
-#include "linux/third-party/ArduinoJson/include/ArduinoJson.hpp"
-#endif
-
-#ifndef FINGERPRINT
-#define FINGERPRINT "31337"
+#include "linux/third-party/ArduinoJson/ArduinoJson.h"
 #endif
 
 using namespace std;
 
-enum miletusType {miBoolean, miNumber, miString,
-                  miInteger, miObject, miUnknown};
-enum miletusRole {viewer, user, manager, owner, robot};
+enum miletusType {
+  miBoolean,
+  miNumber,
+  miString,
+  miInteger,
+  miObject,
+  miUnknown
+};
+enum miletusRole { viewer, user, manager, owner, robot };
 
 class Type;
 class Parameter;
@@ -55,89 +60,81 @@ class Trait;
 class Component;
 class MiletusDevice;
 
-class Type
-{
+class Type {
 public:
-  static miletusType getTypeFromChar(const char * type);
+  static miletusType getTypeFromChar(const char *type);
 };
 
-class Parameter
-{
+class Parameter {
 public:
   Parameter(){};
-  string name; // Remove it
+  string name; // TODO: Remove it
   miletusType type;
   bool isRequired;
   JsonVariant currentValue;
-  list<string> values;
+  list<string> possibleValues;
 };
 
-class Command
-{
-private:
-  miletusRole role;
-  string targetComponent;
-  string response;
-  bool initialized;
-  bool responseJsonInitialized = false;
-  Component* parentComponent;
-  bool (*userFunction)(Command& command);
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject* responseJson;
-  JsonObject* resultsJson;
-
+class Command {
 public:
   std::map<string, Parameter> parameters;
   string name;
 
   Command(){};
-  Command(string name){
-    this->name = name;
-  };
+  Command(string name) { this->name = name; };
   string getJson();
-  bool run(); // Returns true/false; error captured through getJsonResponse();
+  string run(); // Returns true/false; error captured through getJsonResponse();
   // bool parse(string Command);
-  void setUserFunction(bool (*f)(Command& command));
+  void setUserFunction(bool (*f)(Command &command));
   string getResponse();
-  static string createJsonError(string error);
-  string createJsonSuccess();
+  static string displayJsonError(string error);
+  void createJsonError(const char *error);
+  void createJsonSuccess();
   void createJsonResponse();
 
   string getName();
-  void setParentComponent(Component * component);
+  void setParentComponent(Component *component);
 
   list<string> getArgumentList();
   string getArgument(int pos);
   bool appendResult(string key, JsonVariant value);
-  void complete();
-  void abort(string error);
+  void abort(const char *error);
 
   JsonVariant getParameter(string paramName);
+
+private:
+  miletusRole role;
+  string targetComponent;
+  bool responseJsonInitialized = false;
+  Component *parentComponent;
+  bool (*userFunction)(Command &command);
+  JsonObject *responseJson;
+  JsonObject *resultsJson;
+
+  DynamicJsonBuffer *responseJsonBuffer;
 };
 
-class State
-{
+class State {
 public:
   bool isRequired;
   miletusType type;
-  int minimum;
-  int maximum;
-  list<string> values;
+  JsonVariant minimum;
+  JsonVariant maximum;
+  string unity;
+  list<string> possibleValues;
   JsonVariant value;
   string name;
-  bool (*callback)(void);
+  bool (*callback)(const char *component_trait_state_value);
 
-  void setParentComponent(Component * component);
+  void setParentComponent(Component *component);
   string getJson();
-  State(){
-    this->callback = NULL;
-  };
+  State() { this->callback = NULL; };
+
 private:
-  Component* parentComponent;
+  Component *parentComponent;
 };
 
-class Trait
-{
+class Trait {
 public:
   // string name; // is it requeired?
   // Trait(string name){this->name = name;};
@@ -147,78 +144,79 @@ public:
   string getJson();
 };
 
-class Component
-{
-
+class Component {
 public:
   std::map<string, Trait> traits;
   string name;
-  Component(){
-    this->name = "";
-  };
-  Component(string name){
-    this->name = name;
-  }
-  State* getState(const char* trait, const char* state);
-  bool setState(const char* trait, const char* state, JsonVariant value);
-  bool setStateCallback(const char* trait, const char* state, bool (*f)(void));
-  bool setCommand(const char* trait, const char* cmd,
-                  bool (*f)(Command& command));
-  void addTrait(const char* trait, JsonObject * jsonTraits);
+  Component() { this->name = ""; };
+  Component(string name) { this->name = name; }
+  State *getState(const char *trait, const char *state);
+  bool setState(const char *trait, const char *state, JsonVariant value);
+  bool setStateCallback(const char *trait, const char *state,
+                        bool (*f)(const char *component_trait_state_value));
+  bool setCommand(const char *trait, const char *cmd,
+                  bool (*f)(Command &command));
+  void addTrait(const char *trait, JsonObject *jsonTraits);
   string getJson();
 };
 
-class MiletusDevice
-{
+class MiletusDevice {
 public:
-  // Methods
-  MiletusDevice(string name);
+  // create a function fo find a componet/trate/state by it name
+  static MiletusProvider *provider;
 
-  bool addCommInterface(MiletusDeviceCommIf* comm_if, bool def = true);
-  void loadJsonTraits(const char* json);
-  bool addComponent(Component* comp, list<const char *> entries);
-  list<Component*> getComponentList();
-  void createInfo(string name);
+  MiletusDevice(const char *_name);
+
+  bool addCommInterface(MiletusDeviceCommIf *comm_if, bool def = true);
+  void loadJsonTraits(const char *json);
+  bool addComponent(Component *comp, list<const char *> entries);
+  list<Component *> getComponentList();
+  void createInfo();
   string getComponentsJson();
 
   string executeCommand(string jsonCommand);
   void handleEvents();
-  void processRequest(RequestT* request);
+  void processRequest(RequestT *request);
   void dumpTraits();
-  bool setState(const char* componentName, const char* traitName,
-                const char* stateName, JsonVariant value);
-
+  bool setState(const char *componentName, const char *traitName,
+                const char *stateName, JsonVariant value);
+  bool setStateCallback(const char *componentName, const char *traitName,
+                        const char *stateName,
+                        bool (*f)(const char *traitName));
+  bool publishStateUpdate(MiletusDeviceCommIf *commIf);
   /*
    * When this function is called, the device ID is set if it is zero.
    */
-  void setProvider(MiletusProvider* p);
+  void setProvider(MiletusProvider *p);
+  unsigned int getFingerprint();
+
+  DynamicJsonBuffer *getCommandJsonBuffer();
 
   // bool addProvider(MiletusProvider* p) {provider = p;}
-  static MiletusProvider* provider;
-
 private:
-  list<Component*> components;
+  bool updateTransportInfo(char *transport, char *key, char *value);
+
+  list<Component *> components;
   list<MiletusDeviceCommIf *> comm_ifs;
 
   std::map<string, string> settings;
-  std::map<string, void (*) (void)> setting_cbs;
+  std::map<string, void (*)(void)> setting_cbs;
 
   bool jsonInit = false;
 
-  void merge(JsonObject* dest, JsonObject& src);
+  void merge(JsonObject *dest, JsonObject &src);
   void initJson();
 
-  char * _buffer = NULL;
+  char *_buffer = NULL;
 
-  const char * jsonInfoDefs;
-
-  string name;
-  JsonObject* jsonTraits;
-  JsonObject* jsonNestedTraits;
-  JsonObject* jsonInfo;
-  DynamicJsonBuffer jsonBuffer;
-  DynamicJsonBuffer infoJsonBuffer;
+  int fingerprint = 0;
+  bool hasUpdateToBePublished = false;
+  const char *name;
+  JsonObject *jsonTraits;
+  JsonObject *jsonNestedTraits;
+  JsonObject *jsonInfo;
+  DynamicJsonBuffer *traitsJsonBuffer;
+  DynamicJsonBuffer *infoJsonBuffer;
 };
 
-
-#endif // libMiletus_H
+#endif // LIB_MILETUS_H
